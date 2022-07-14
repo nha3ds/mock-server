@@ -1,0 +1,31 @@
+name: Build mock-server-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Docker Login
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: docker login DockerContainerRegistry -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+    - name: Docker Build
+      run: docker build --build-arg env_name=test . -t  DockerContainerRegistry/mock-server:latest -t  DockerContainerRegistry/mock-server:${{ github.sha }}
+
+    - name: Docker Push
+      run: docker push --all-tags DockerContainerRegistry/mock-server
+      
+    - name: Deploy to K8S
+      uses: kubectl@v1.17.9
+      env:
+        KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_TEST }}
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      with:
+        args: set image --record deployment/mock-server-test-deployment mock-server-test-deployment=DockerContainerRegistry/mock-server:${{ github.sha }} -n mock-server

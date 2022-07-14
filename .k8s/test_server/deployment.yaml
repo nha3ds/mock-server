@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-server-test-deployment
+  namespace: mock-server
+  labels:
+    app: mock-server-test-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-server-test-deployment
+  template:
+    metadata:
+      labels:
+        app: mock-server-test-deployment
+    spec:
+      containers:
+        - name: mock-server-test-deployment
+          image: DockerContainerRegistry/mock-server:latest
+          env:
+          - name: TZ
+            value: Asia/Riyadh
+          ports:
+          - containerPort: 8080
+      imagePullSecrets:
+        - name: DOCKER_SECRET_IN_KUBERNETES
